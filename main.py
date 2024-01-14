@@ -50,6 +50,9 @@ class NeuralNetwork:
         self.weights2 -= self.learning_rate * d_weights2
         self.weights3 -= self.learning_rate * d_weights3
 
+    def reset_input(self, x):
+        self.input = x
+
 # Load and preprocess the MNIST dataset (Adjust the path to your MNIST CSV file)
 mnist_data = pd.read_csv('mnist_train.csv')
 print(mnist_data.columns)  # Add this line to check column names
@@ -66,17 +69,23 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_one_hot, test_size=0.2,
 
 # Initialize and train the neural network
 nn = NeuralNetwork(X_train, y_train)
-for i in range(1000):  # Number of epochs for testing
-    nn.feedforward()
-    nn.backprop()
-    if i % 100 == 0:  # Print loss every 100 iterations
-        loss = np.mean(np.square(y_train - nn.output))
-        print(f'Epoch {i}, Loss: {loss}')
+
+def train_additional_iterations(nn, iterations=100):
+    for i in range(iterations):
+        nn.feedforward()
+        nn.backprop()
+        if i % 10 == 0:  # Print loss every 10 iterations for better feedback
+            loss = np.mean(np.square(y_train - nn.output))
+            print(f'Additional Epoch {i}, Loss: {loss}')
+    return nn
 
 # GUI Class
 class DigitRecognizerGUI:
-    def __init__(self, master):
+    def __init__(self, master, neural_network):
         self.master = master
+        self.neural_network = neural_network
+        self.iterations_done = 100  # Initially 100 iterations done
+
         master.title("Handwritten Digit Recognizer")
 
         self.label = tk.Label(master, text="Upload a digit image")
@@ -92,6 +101,20 @@ class DigitRecognizerGUI:
         self.result_label.pack()
 
         self.neural_network = nn
+
+        self.additional_train_button = tk.Button(master, text="Train More", command=self.train_more)
+        self.additional_train_button.pack()
+
+        self.iterations_label = tk.Label(master, text=f"Total Iterations: {self.iterations_done}")
+        self.iterations_label.pack()
+
+
+    def train_more(self):
+        # Reset the input of the neural network to the original training data
+        self.neural_network.reset_input(X_train)
+        self.neural_network = train_additional_iterations(self.neural_network, 100)
+        self.iterations_done += 100
+        self.iterations_label.config(text=f"Total Iterations: {self.iterations_done}")
 
     def upload_image(self):
         self.file_path = filedialog.askopenfilename()
@@ -150,8 +173,17 @@ class DigitRecognizerGUI:
 # Main function to run the GUI
 def main():
     root = tk.Tk()
-    gui = DigitRecognizerGUI(root)
+    gui = DigitRecognizerGUI(root, nn)
     root.mainloop()
 
+# Train the neural network for the initial 100 iterations
+for i in range(100):
+    nn.feedforward()
+    nn.backprop()
+    if i % 10 == 0:
+        loss = np.mean(np.square(y_train - nn.output))
+        print(f'Initial Epoch {i}, Loss: {loss}')
+
+# Launch the GUI
 if __name__ == "__main__":
     main()
