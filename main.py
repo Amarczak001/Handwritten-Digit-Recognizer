@@ -28,7 +28,7 @@ class NeuralNetwork:
         self.weights3 = np.random.randn(64, 10) / np.sqrt(64)  # Output layer
         self.y = y
         self.output = np.zeros(self.y.shape)
-        self.learning_rate = 0.4  # Smaller learning rate
+        self.learning_rate = 0.25  # Smaller learning rate
 
     def feedforward(self):
         self.layer1 = relu(np.dot(self.input, self.weights1))
